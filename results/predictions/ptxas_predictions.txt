@@ -1,0 +1,14 @@
+nvcc -std=c++20 -O3 -arch=sm_80 -lineinfo -Xcompiler -Wall,-Wextra -Xptxas -v -c kernels.cu -o /dev/null 2>&1 | \
+    grep -E "Compiling entry|Used" | cu++filt
+ptxas info    : Compiling entry function 'void sgemm_tiled_kernel<(int)32>(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 32 registers, used 1 barriers, 8192 bytes smem, 392 bytes cmem[0]
+ptxas info    : Compiling entry function 'void sgemm_tiled_kernel<(int)16>(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 32 registers, used 1 barriers, 2048 bytes smem, 392 bytes cmem[0]
+ptxas info    : Compiling entry function 'void sgemm_tiled_kernel<(int)8>(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 32 registers, used 1 barriers, 512 bytes smem, 392 bytes cmem[0]
+ptxas info    : Compiling entry function 'sgemm_reg1d_kernel(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 38 registers, used 1 barriers, 4096 bytes smem, 392 bytes cmem[0]
+ptxas info    : Compiling entry function 'sgemm_coalesced_kernel(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 32 registers, used 0 barriers, 392 bytes cmem[0]
+ptxas info    : Compiling entry function 'sgemm_naive_kernel(int, float, const float *, const float *, float, float *)' for 'sm_80'
+ptxas info    : Used 32 registers, used 0 barriers, 392 bytes cmem[0]
