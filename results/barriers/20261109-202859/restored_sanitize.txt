@@ -1,0 +1,13 @@
+compute-sanitizer --tool memcheck --leak-check full \
+    --error-exitcode 1 ./sgemm all 256 --once
+========= COMPUTE-SANITIZER
+========= LEAK SUMMARY: 0 bytes leaked in 0 allocations
+========= ERROR SUMMARY: 0 errors
+compute-sanitizer --tool racecheck --error-exitcode 1 \
+    ./sgemm all 256 --once
+========= COMPUTE-SANITIZER
+========= RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)
+compute-sanitizer --tool synccheck --error-exitcode 1 \
+    ./sgemm all 256 --once
+========= COMPUTE-SANITIZER
+========= ERROR SUMMARY: 0 errors

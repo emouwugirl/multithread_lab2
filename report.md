@@ -97,28 +97,47 @@ SM per cycle, the bound is 0.5 warp FMA instructions per cycle. Relative
 to the A100's peak of two, this is `0.5/2 = 25%` of FP32 peak, about
 4,873 GFLOP/s using the harness peak of 19,492 GFLOP/s.
 
-### Barrier experiment — pending
+### Barrier experiment — results
 
-Remove only the first barrier, rebuild, and save both outputs:
+Ran on `c301-003.ls6.tacc.utexas.edu`, NVIDIA A100-PCIE-40GB, with CUDA
+12.8. Logs are in `results/barriers/20261109-202859/`. The script removed
+each barrier separately in a temporary source copy, rebuilt, and ran:
 
 ```sh
 ./sgemm check
 compute-sanitizer --tool racecheck ./sgemm tiled 256 --once
 ```
 
-Restore the first barrier, remove only the second, rebuild, and save both
-outputs again. Restore both barriers and rebuild afterward.
+| Removed barrier | Correctness check | Racecheck at T = 32, N = 256 |
+|---|---|---|
+| First: after loading shared tiles | All tiled variants failed at N = 128, 384, 1024; exit 1 | 2 hazards displayed (1 error, 1 warning) |
+| Second: after consuming shared tiles | T = 32 failed at all sizes; T = 8 and 16 passed at N = 128 but failed at 384 and 1024; exit 1 | 2 hazards displayed (1 error, 1 warning) |
 
-Expected hazards: the first barrier prevents a shared read before another
-thread has written the current tile (read-after-write). The second prevents
-the next tile's writes from overwriting values another thread is still
-reading (write-after-read). Record actual outcomes; a numerical check may
-pass despite an unsynchronized access, whereas racecheck examines hazards.
+The first barrier prevents read-after-write hazards: a thread must not
+read `As[ty][k]` or `Bs[k][tx]` before the thread supplying that value has
+written the current slice. The second prevents write-after-read hazards:
+a faster thread must not overwrite a shared tile with the next slice
+while another thread still reads the current slice.
+
+Both tools identified a problem in each T = 32 experiment. Passing checks
+for T = 8 and 16 at N = 128 without the second barrier do not establish
+race freedom: a numerical check observes one execution's output, and a
+race need not affect that output on every execution. Those small-tile
+passes are not a direct disagreement with racecheck, which tested T = 32
+at N = 256. Both racecheck commands returned exit status 0 despite their
+reported hazards; these experiment commands did not set a nonzero
+`--error-exitcode`. The summaries, not those exit statuses, show the races.
+
+After restoring both barriers in the temporary copy, all 33 correctness
+checks passed. Memcheck reported zero errors and zero leaked bytes,
+racecheck reported zero hazards, and synccheck reported zero errors.
+All three builds produced no warnings. The working CUDA source remained
+unchanged. The four required raw outputs are `first_check.txt`,
+`first_racecheck.txt`, `second_check.txt`, and `second_racecheck.txt`.
 
 ### Measured comparison — pending
 
-Insert the four experiment results and explain any disagreement between
-correctness and racecheck. Compare the sector ratio with 20 and tiled's
+Compare the sector ratio with 20 and tiled's
 measured `%peak` with the source-level 25% bound.
 
 ## Part 4 — Block shape and tile size

@@ -1,0 +1,5 @@
+first_check exit status: 1
+first_racecheck exit status: 0
+second_check exit status: 1
+second_racecheck exit status: 0
+Original kernel passed check and sanitize.
